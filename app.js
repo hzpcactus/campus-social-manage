@@ -1,13 +1,50 @@
 var createError = require('http-errors');
 var express = require('express');
+var http = require('http');
 var path = require('path');
 var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser');
 var logger = require('morgan');
+// const socket = require('./tools/socket');
+
+var app = express();
+var debug = require('debug')('campus-social-manage:server');
+
+var port = normalizePort(process.env.PORT || '3000');
+app.set('port', port);
+
+var server = http.createServer(app);
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);
+
+//socket.io通讯 start
+var io = require('socket.io').listen(server);
+io.on('connection',function(socket){
+  console.log("连接成功");
+  socket.on("sendmsg",function(data){
+    console.log("收到数据",data);
+    // socket.emit("getmsg",data);
+    socket.broadcast.emit("getmsg",data);
+  });
+
+})
+
+
+// var dd=io.of(`/dd`).on('connection',function(socket){
+//   socket.emit('friendApply',{type:'friendApply',personApply:'哈哈啊哈哈啊哈'});
+// });
+
+
+//socket.io通讯 end
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-
-var app = express();
+var friendsRouter = require('./routes/friends');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -19,8 +56,14 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: false}));
+
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/friends', friendsRouter);
+
+app.use(express.static('public'));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -38,4 +81,59 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-module.exports = app;
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+  var port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  var bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+  var addr = server.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+}
+module.exports = app
