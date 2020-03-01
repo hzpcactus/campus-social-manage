@@ -186,6 +186,74 @@ router.post("/add",(req,res,next)=>{
    });
 });
 
+//好友申请回馈
+router.post("/friendsApply",async function(req,res,next){
+  await updateSpliceFriend(req.body.personAccept,"friend_accept","friends","person_id",req.body.personApply);
+  await updateSpliceFriend(req.body.personApply,"friend_apply","friends","person_id",req.body.personAccept);
+  if(req.body.isYN=='Y'){      //同意添加
+   await updatePushFriend(req.body.personApply,"friend_list","friends","person_id",req.body.personAccept,res);
+  }else{
+    res.json({
+      status:"0",
+      msg:"已拒绝"
+    });
+  }
+});
+
+function updateSpliceFriend(reqItem,selectItem,database,item,spliceItem){
+  let selectItemSplit=[];
+   return new Promise(function(resolve,reject){
+      connection.query(`select ${selectItem} from ${database} where ${item}='${reqItem}'`,function(err,result){
+        if(result.length>0){
+           selectItemSplit=result[0][selectItem].split(",");
+           selectItemSplit.splice(selectItemSplit.findIndex((value,index,arr)=>{
+              return value =`'${spliceItem}'`;
+           }),1);
+           if(selectItemSplit.length>0){
+             resolve(selectItemSplit.join(","));
+           }else{
+             resolve(null);
+           }
+        }
+      }); 
+    }).then(res1=>{
+      connection.query(`UPDATE ${database} SET ${selectItem} = "${res1}" WHERE ${item} = '${reqItem}'`,function(err,result){
+      
+      });
+    });
+}
+
+function updatePushFriend(reqItem,selectItem,database,item,pushItem,res){
+  let selectItemSplit=[];
+   return new Promise(function(resolve,reject){
+      connection.query(`select ${selectItem} from ${database} where ${item}='${reqItem}'`,function(err,result){
+        if(result.length>0){
+           selectItemSplit=result[0][selectItem].split(",");
+           selectItemSplit.push(`'${pushItem}'`);
+           if(selectItemSplit.length>0){
+             resolve(selectItemSplit.join(","));
+           }else{
+             resolve(null);
+           }
+        }
+      }); 
+    }).then(res1=>{
+      connection.query(`UPDATE ${database} SET ${selectItem} = "${res1}" WHERE ${item} = '${reqItem}'`,function(err,result){
+         if(result){
+            res.json({
+              status:"0",
+              msg:"已同意"
+            });
+         }else{
+           res.json({
+             status:"1",
+             msg:err
+           });
+         }
+      });
+    });
+}
+
 function addFriend(res){
   let addFriend=res.friend_list==null?[]:res.friend_list.split(",");
   addFriend.push(req.body.personFriend);
