@@ -10,7 +10,8 @@ const connection = mysql.createConnection({
   user     : 'root',              
   password : '19980605',       
   port: '3306',                   
-  database: 'campus-social' 
+  database: 'campus-social',
+  timezone: "08:00"
 }); 
  
 connection.connect();
@@ -56,6 +57,9 @@ router.get('/school', function(req, res, next) {
 router.post('/login', function(req, res, next) {
   connection.query(`select * from person where person_account='${req.body.personAccount}' and person_password='${req.body.personPassword}'`,function (err, result) {
     if(result.length>0){        //用户可以登录
+      connection.query(`UPDATE person SET person_time = now() WHERE person_account = '${req.body.personAccount}'`,function(err,result){
+
+      });
       res.json({
         status:"0",
         msg:result[0]
@@ -63,7 +67,7 @@ router.post('/login', function(req, res, next) {
     }else{
       res.json({
         status:"1",
-        msg:"该账号未注册，请注册"
+        msg:"密码错误或该账号未注册！"
       });
     }
   });
@@ -132,6 +136,7 @@ router.post('/update', function(req, res, next) {
 //用户注册
 router.post('/registered',function(req,res,next) {
   // console.log(req.body.personAccount);
+  console.log(new Date().Format("yyyy-MM-dd HH:mm:ss"));
   req.body.personPlace=(typeof req.body.personPlace)=='string'?req.body.personPlace:req.body.personPlace.join(",");
   connection.query(`select person_account from person where person_account='${req.body.personAccount}'`,function (err, result) {   //查询用户名是否存在
     // console.log(result,result.length);
@@ -142,8 +147,8 @@ router.post('/registered',function(req,res,next) {
         msg:"用户已存在！"
       });
     }else{           //结果为空数组
-      let addsql = 'INSERT INTO person(person_account, person_password, person_name, person_id_card, person_sex, person_birthday, person_place, person_picture, person_signature, person_school, person_professional,person_grade) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)';
-      let addSqlParams = [req.body.personAccount,req.body.personPassword,req.body.personName,req.body.personIdCard, req.body.personSex, req.body.personBirthday, req.body.personPlace, req.body.personPicture, req.body.personSignature, req.body.personSchool, req.body.personProfessional, req.body.personGrade];
+      let addsql = 'INSERT INTO person(person_account, person_password, person_name, person_id_card, person_sex, person_birthday, person_place, person_picture, person_signature, person_school, person_professional,person_grade,person_time,person_ismanage) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
+      let addSqlParams = [req.body.personAccount,req.body.personPassword,req.body.personName,req.body.personIdCard, req.body.personSex, req.body.personBirthday, req.body.personPlace, req.body.personPicture, req.body.personSignature, req.body.personSchool, req.body.personProfessional, req.body.personGrade,new Date().Format("yyyy-MM-dd HH:mm:ss"),0];
       connection.query(addsql,addSqlParams,function (err,result) {
         if(err){
           // res.send(err.message);
@@ -213,6 +218,22 @@ router.post('/delete/headImage', function(req, res, next) {
     }
   })
 });
+
+Date.prototype.Format = function (fmt) {
+  var o = {
+      "M+": this.getMonth() + 1, //月份 
+      "d+": this.getDate(), //日 
+      "H+": this.getHours(), //小时 
+      "m+": this.getMinutes(), //分 
+      "s+": this.getSeconds(), //秒 
+      "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
+      "S": this.getMilliseconds() //毫秒 
+  };
+  if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+  for (var k in o)
+  if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+  return fmt;
+}
 
 
 module.exports = router;

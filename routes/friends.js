@@ -9,7 +9,8 @@ const connection = mysql.createConnection({
   user     : 'root',              
   password : '19980605',       
   port: '3306',                   
-  database: 'campus-social' 
+  database: 'campus-social' ,
+  timezone: "08:00"
 }); 
  
 connection.connect();
@@ -30,7 +31,7 @@ router.post('/search', function(req, res, next) {
       }
     })
   }).then(personFriends=>{
-      // console.log(personFriends);
+      console.log(personFriends);
       connection.query(`
         SELECT person_account,person_signature,person_picture 
         FROM person 

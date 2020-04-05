@@ -42,9 +42,48 @@ io.on('connection',function(socket){
 
 //socket.io通讯 end
 
+//更新数据 start
+const mysql = require('mysql');
+const connection = mysql.createConnection({     
+  host     : 'localhost',       
+  user     : 'root',              
+  password : '19980605',       
+  port: '3306',                   
+  database: 'campus-social' ,
+  timezone: "08:00"
+}); 
+ 
+connection.connect();
+const schedule = require('node-schedule');
+const  scheduleCronstyle = ()=>{             //每天统计更新在线人数
+  //每天的凌晨0点0分0秒触发 
+    schedule.scheduleJob('59 59 23 * * *',()=>{      //6个占位符从左到右分别代表：秒、分、时、日、月、周几
+      let dateTime = (new Date()).toLocaleDateString().replace("/","-");
+      connection.query(`select * from person where person_time between '${dateTime} 00:00:00' and '${dateTime} 23:59:59'`,function(err,result){
+        if(result){
+          let personArr = [];
+          result.forEach(item=>{
+            personArr.push(`'${item.person_account}'`);
+          });
+          personArr = personArr.join(",");
+          connection.query(`INSERT INTO statistic(date_time, online_person, online_number) VALUES(?,?,?)`,[dateTime,personArr,personArr.split(",").length],function(err,result){
+
+          })
+        }
+      });
+      
+    }); 
+}
+
+scheduleCronstyle();
+//更新数据 end
+
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var friendsRouter = require('./routes/friends');
+var noticeRouter = require('./routes/notice');
+var manageRouter = require('./routes/manage');
+var blogRouter = require('./routes/blog');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -62,6 +101,9 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/friends', friendsRouter);
+app.use('/notice', noticeRouter);
+app.use('/manage', manageRouter);
+app.use('/blog', blogRouter);
 
 app.use(express.static('public'));
 
