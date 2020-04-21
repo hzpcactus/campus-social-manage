@@ -23,16 +23,23 @@ server.on('error', onError);
 server.on('listening', onListening);
 
 //socket.io通讯 start
-var io = require('socket.io').listen(server);
-io.on('connection',function(socket){
-  console.log("连接成功");
-  socket.on("sendmsg",function(data){
-    console.log("收到数据",data);
-    // socket.emit("getmsg",data);
-    socket.broadcast.emit("getmsg",data);
-  });
+// var io = require('socket.io').listen(server);
+// io.on('connection',function(socket){
+//   console.log("连接成功");
+//   socket.on("sendFriendApply",function(data){
+//     console.log("收到数据",data);
+//     socket.broadcast.emit("getFriendApply",data);
+//   });
 
-})
+// })
+
+//socket.io引入
+// var http = require('http').Server(app);
+var io = require('socket.io')(server,{
+	pingInterval: 10000,
+  pingTimeout: 5000,
+});
+require('./tools/socket.js')(io);
 
 
 // var dd=io.of(`/dd`).on('connection',function(socket){
@@ -56,7 +63,7 @@ const connection = mysql.createConnection({
 connection.connect();
 const schedule = require('node-schedule');
 const  scheduleCronstyle = ()=>{             //每天统计更新在线人数
-  //每天的凌晨0点0分0秒触发 
+  //每天的23点59分59秒触发 
     schedule.scheduleJob('59 59 23 * * *',()=>{      //6个占位符从左到右分别代表：秒、分、时、日、月、周几
       let dateTime = (new Date()).toLocaleDateString().replace("/","-");
       connection.query(`select * from person where person_time between '${dateTime} 00:00:00' and '${dateTime} 23:59:59'`,function(err,result){
@@ -84,6 +91,7 @@ var friendsRouter = require('./routes/friends');
 var noticeRouter = require('./routes/notice');
 var manageRouter = require('./routes/manage');
 var blogRouter = require('./routes/blog');
+var chatRouter = require('./routes/chat');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -104,6 +112,8 @@ app.use('/friends', friendsRouter);
 app.use('/notice', noticeRouter);
 app.use('/manage', manageRouter);
 app.use('/blog', blogRouter);
+app.use('/chat', chatRouter);
+
 
 app.use(express.static('public'));
 

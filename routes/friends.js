@@ -1,7 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const router = express.Router();
-const socket = require('../tools/socket');
+const socket = require('../tools/socket1');
 const mysql = require('mysql');
 const multiparty = require("multiparty")
 const connection = mysql.createConnection({     
@@ -189,10 +189,16 @@ router.post("/add",(req,res,next)=>{
 
 //好友申请回馈
 router.post("/friendsApply",async function(req,res,next){
-  await updateSpliceFriend(req.body.personAccept,"friend_accept","friends","person_id",req.body.personApply);
-  await updateSpliceFriend(req.body.personApply,"friend_apply","friends","person_id",req.body.personAccept);
+  await updateSpliceFriend(req.body.to_person_id,"friend_accept","friends","person_id",req.body.from_person_id);
+  await updateSpliceFriend(req.body.from_person_id,"friend_apply","friends","person_id",req.body.to_person_id);
   if(req.body.isYN=='Y'){      //同意添加
-   await updatePushFriend(req.body.personApply,"friend_list","friends","person_id",req.body.personAccept,res);
+    //同时更新双方好友列表
+    await updatePushFriend(req.body.from_person_id,"friend_list","friends","person_id",req.body.to_person_id,res);
+    await updatePushFriend(req.body.to_person_id,"friend_list","friends","person_id",req.body.from_person_id,res);  
+    res.json({
+      status:"0",
+      msg:"已同意"
+    });
   }else{
     res.json({
       status:"0",
@@ -208,7 +214,7 @@ function updateSpliceFriend(reqItem,selectItem,database,item,spliceItem){
         if(result.length>0){
            selectItemSplit=result[0][selectItem].split(",");
            selectItemSplit.splice(selectItemSplit.findIndex((value,index,arr)=>{
-              return value =`'${spliceItem}'`;
+              return value ==`'${spliceItem}'`;
            }),1);
            if(selectItemSplit.length>0){
              resolve(selectItemSplit.join(","));
@@ -218,9 +224,16 @@ function updateSpliceFriend(reqItem,selectItem,database,item,spliceItem){
         }
       }); 
     }).then(res1=>{
-      connection.query(`UPDATE ${database} SET ${selectItem} = "${res1}" WHERE ${item} = '${reqItem}'`,function(err,result){
+      if(res1===null){
+        connection.query(`UPDATE ${database} SET ${selectItem} = ${res1} WHERE ${item} = '${reqItem}'`,function(err,result){
       
-      });
+        });
+      }else{
+        connection.query(`UPDATE ${database} SET ${selectItem} = "${res1}" WHERE ${item} = '${reqItem}'`,function(err,result){
+      
+        });
+      }
+      
     });
 }
 
@@ -239,19 +252,16 @@ function updatePushFriend(reqItem,selectItem,database,item,pushItem,res){
         }
       }); 
     }).then(res1=>{
-      connection.query(`UPDATE ${database} SET ${selectItem} = "${res1}" WHERE ${item} = '${reqItem}'`,function(err,result){
-         if(result){
-            res.json({
-              status:"0",
-              msg:"已同意"
-            });
-         }else{
-           res.json({
-             status:"1",
-             msg:err
-           });
-         }
-      });
+      if(res1===null){
+        connection.query(`UPDATE ${database} SET ${selectItem} = ${res1} WHERE ${item} = '${reqItem}'`,function(err,result){
+       
+        });
+      }else{
+        connection.query(`UPDATE ${database} SET ${selectItem} = "${res1}" WHERE ${item} = '${reqItem}'`,function(err,result){
+       
+        });
+      }
+      
     });
 }
 

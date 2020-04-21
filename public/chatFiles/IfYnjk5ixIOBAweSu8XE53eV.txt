@@ -1,0 +1,35 @@
+前后端并行开发
+socket.io聊天思路
+一对一进行聊天：
+   客户端向服务端发送socket时，用socket.emit('message',obj),其中message可自行定义，obj中传入属性值
+{
+   to:to,   //toid+fromid组合
+   message: message,  //信息
+   fromid: fromid,      //自己
+   toid: toid               //对方
+}
+然后server端用socket.on('message',function(msg){      //参数msg就是obj
+     内部进行存储到数据库，
+     if(在线){         //为已读
+        status:1
+
+       socket.to(socket.id).emit('sendMsg',msg.fromid,msg.message);
+     }else{     //不在线,未读
+        status:0
+     }       
+ })
+如果对方在线客户端直接接收：
+socket.on('sendMsg',function(id,msg){
+  界面接收信息，更新界面数据
+}）
+如果对方不在线，那在对方登录之后，从数据库找未读信息更新界面数据
+
+//发送信息给服务端
+this.$socket.emit('login',{username:this.zhanghao,password:this.password});
+//login 自定义名字
+//{username:this.zhanghao,password:this.password}   发送数据集合
+ 
+//接收服务端的信息
+this.sockets.subscribe('relogin', (data) => {
+       console.log(data.unsuccessful)
+})
