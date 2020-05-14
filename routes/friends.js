@@ -207,6 +207,16 @@ router.post("/friendsApply",async function(req,res,next){
   }
 });
 
+//删除好友
+router.post("/deleteFriend",async function(req,res,next){
+  await updateSpliceFriend(req.body.personAccount,"friend_list","friends","person_id",req.body.deleteFriend);
+  await updateSpliceFriend(req.body.deleteFriend,"friend_list","friends","person_id",req.body.personAccount); 
+  res.json({
+    status:"0",
+    msg:"删除成功！"
+  });
+});
+
 function updateSpliceFriend(reqItem,selectItem,database,item,spliceItem){
   let selectItemSplit=[];
    return new Promise(function(resolve,reject){

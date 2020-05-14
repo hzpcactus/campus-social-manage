@@ -193,7 +193,7 @@ router.post('/upload/headImage', function(req, res, next) {
       res.json({ 
         status:"0",
         msg:"上传成功！",
-        personPicture: "http://localhost:3000"+files.file[0].path.split("public")[1]
+        personPicture: "http://localhost:3000"+files.file[0].path.split("public")[1].replace(/\\/g,"/")
       });
     }
   });  

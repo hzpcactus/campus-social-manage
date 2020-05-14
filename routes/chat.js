@@ -163,6 +163,9 @@ router.post('/upload/chatfile',function(req, res, next) {
 
 //收藏聊天记录
 router.post("/toCollection",function(req,res,next){
+   if(!req.body.collectionFromGroupName){
+     req.body.collectionFromGroupName = null;
+   };
    let addsql = `INSERT INTO collection(collection_person_id,collection_content,collection_from_person_id,collection_from_group_name,collection_time) VALUES('${req.body.personAccount}','${req.body.collectionContent}','${req.body.fromPersonId}','${req.body.collectionFromGroupName}','${req.body.sendTime}')`;
    connection.query(addsql,function(err,result){
       if(err){

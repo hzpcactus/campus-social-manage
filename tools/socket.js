@@ -29,7 +29,7 @@ module.exports = function(io){
       socketChat[id.from+"#"+id.to] = socket.id;
     });
 
-    //接收好友申请
+    //即时接收好友申请
     socket.on('sendFriendApply',(msg)=>{
       console.log("收到申请");
        if(socketLogin[msg.to_person_id]){
@@ -38,10 +38,11 @@ module.exports = function(io){
        }
     });
 
-    //接收用户信息
+    //即时接收用户信息
     socket.on('message',(msg)=>{
       console.log(msg);
-       if(socketChat[msg.to]){      //如对方在二人聊天室中，服务端直接发送信息给对方前端，同时将此记录保存在数据库中,status为1
+       if(socketChat[msg.to]){      
+      //如对方在二人聊天室中，服务端直接发送信息给对方前端，同时将此记录保存在数据库中,status为1
         let addsql = `INSERT INTO chat(from_person_id,to_person_id,message,status,send_time) VALUES('${msg.from_person_id}','${msg.to_person_id}','${msg.message}',1,NOW())`;
         connection.query(addsql,function(err,result){
            if(err){
