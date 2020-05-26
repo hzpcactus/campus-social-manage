@@ -78,7 +78,11 @@ router.post('/sendBlog',function(req,res,next){
 router.post('/searchBlog',function(req,res,next){
   new Promise((resolve,reject) => {
     connection.query(`select friend_list from friends where person_id='${req.body.personAccount}'`,function(err,result){
-      resolve(result[0].friend_list==undefined?null:result[0].friend_list);
+      if(err){
+        resolve(null);
+      }else{
+        resolve(result.length>0?result[0].friend_list:null);
+      }
     });
   }).then(res1=>{
     let blogSender = res1==null?[]:res1.split(",");
