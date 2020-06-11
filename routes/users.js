@@ -78,19 +78,26 @@ router.get('/school', function(req, res, next) {
 //登录
 router.post('/login', function(req, res, next) {
   connection.query(`select * from person where person_account='${req.body.personAccount}' and person_password='${req.body.personPassword}'`,function (err, result) {
-    if(result.length>0){        //用户可以登录
-      connection.query(`UPDATE person SET person_time = now() WHERE person_account = '${req.body.personAccount}'`,function(err,result){
-
-      });
-      res.json({
-        status:"0",
-        msg:result[0]
-      });
-    }else{
+    if(err){
       res.json({
         status:"1",
-        msg:"密码错误或该账号未注册！"
+        msg:err
       });
+    }else{
+      if(result.length>0){        //用户可以登录
+        connection.query(`UPDATE person SET person_time = now() WHERE person_account = '${req.body.personAccount}'`,function(err,result){
+  
+        });
+        res.json({
+          status:"0",
+          msg:result[0]
+        });
+      }else{
+        res.json({
+          status:"1",
+          msg:"密码错误或该账号未注册！"
+        });
+      }
     }
   });
   // connection.end();
