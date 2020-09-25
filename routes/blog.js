@@ -267,10 +267,10 @@ router.post('/searchTheme',function(req,res1,next){
       result.forEach(item=>{
         param={
           key:"https://hbimg.huabanimg.com/"+item["file"]["key"],
-          tags:item["file"]["tags"],
-          text:item["file"]["raw_text"],
-          like_count:item["file"]["like_count"],
-          repin_count:item["file"]["repin_count"],
+          tags:item["tags"],
+          text:item["raw_text"],
+          like_count:item["like_count"],
+          repin_count:item["repin_count"],
         }
         arr.push(param);
       });
