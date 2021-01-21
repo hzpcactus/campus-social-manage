@@ -47,7 +47,7 @@ router.post('/searchUnread',function(req,res,next){
             msg:err
         });
       }else{
-        async.map(result[0].friend_list.replace(/'/g,"").split(","),function(item,callback){
+        async.map(result.length && result[0].friend_list ? result[0].friend_list.replace(/'/g,"").split(",") : [],function(item,callback){
            connection.query(`SELECT COUNT(*) FROM chat where from_person_id = '${item}' and to_person_id = '${req.body.personAccount}' and status = '0'`,function(err1,result1){
               if(err1){
                 res.json({
