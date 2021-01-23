@@ -149,7 +149,7 @@ router.post("/add",(req,res,next)=>{
     });
    }).then(res1=>{
       console.log(res1);
-      let friendApply=res1.friend_apply==null?[]:res1.friend_apply.split(",");
+      let friendApply = res1 && res1.friend_apply ? res1.friend_apply.split(",") : [];
       friendApply.push(req.body.personFriend);
       friendApply=friendApply.join(",");
       // console.log(friendApply);
@@ -178,7 +178,7 @@ router.post("/add",(req,res,next)=>{
       });
    }).then(res3=>{
     //  console.log(res3,10);
-      let friendAccept=res3.friend_accept==undefined||null?[]:res3.friend_accept.split(",");
+      let friendAccept = res3 && res3.friend_accept ? res3.friend_accept.split(",") : [];
       friendAccept.push(`'${req.body.personAccount}'`);
       friendAccept=friendAccept.join(",");   
       // console.log(friendAccept,12); 
@@ -244,7 +244,7 @@ function updateSpliceFriend(reqItem,selectItem,database,item,spliceItem){
    return new Promise(function(resolve,reject){
       connection.query(`select ${selectItem} from ${database} where ${item}='${reqItem}'`,function(err,result){
         if(result.length>0){
-           selectItemSplit=result[0][selectItem].split(",");
+           selectItemSplit = result.length && result[0][selectItem] ? result[0][selectItem].split(",") : [];
            selectItemSplit.splice(selectItemSplit.findIndex((value,index,arr)=>{
               return value ==`'${spliceItem}'`;
            }),1);
@@ -274,7 +274,7 @@ function updatePushFriend(reqItem,selectItem,database,item,pushItem,res){
    return new Promise(function(resolve,reject){
       connection.query(`select ${selectItem} from ${database} where ${item}='${reqItem}'`,function(err,result){
         if(result.length>0){
-           selectItemSplit=result[0][selectItem].split(",");
+           selectItemSplit = result.length && result[0][selectItem] ? result[0][selectItem].split(",") : [];
            selectItemSplit.push(`'${pushItem}'`);
            if(selectItemSplit.length>0){
              resolve(selectItemSplit.join(","));
@@ -298,7 +298,7 @@ function updatePushFriend(reqItem,selectItem,database,item,pushItem,res){
 }
 
 function addFriend(res){
-  let addFriend=res.friend_list==null?[]:res.friend_list.split(",");
+  let addFriend = res.friend_list ? res.friend_list.split(",") : [];
   addFriend.push(req.body.personFriend);
   // console.log(req.body.personFriend);
   addFriend=addFriend.join(",");
