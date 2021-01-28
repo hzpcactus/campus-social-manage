@@ -47,26 +47,49 @@ router.post('/upload/headImage',function(req, res, next) {
     form.uploadDir=path.resolve(__dirname,`../public/images/blog`);
     // console.log(form.uploadDir);
     form.keepExtensions=true;   //是否保留后缀
-    form.autoFiels=true;       //启用文件事件，并禁用部分文件事件，如果监听文件事件，则默认为true。
-    form.parse(req,function(err,fields,files){  //其中fields表示你提交的表单数据对象，files表示你提交的文件对象
-      // console.log(req);
-      // console.log(fields,files); 
-      if(err){
-        res.json({
-          status:"1",
-          msg:"上传失败！"+err
-        });
-      }else{
-        console.log(files);
-        let urlPath = files.file[0].path.split("public")[1].replace(/\\/g,"/");
-        console.log(urlPath);
+    // form.autoFiels=true;       //启用文件事件，并禁用部分文件事件，如果监听文件事件，则默认为true。
+    form.parse(req);
+    form.on('field', (name, value) => { // 接收到数据参数时，触发field事件
+      console.log(name, value)
+    })
+    form.on('file', (name, file, ...rest) => { // 接收到文件参数时，触发file事件
+      //判断是否为空对象
+      if(JSON.stringify(file) !== '{}'){
         res.json({ 
           status:"0",
           msg:"上传成功！",
-          personPicture: "http://localhost:3000"+urlPath
+          personPicture: "http://localhost:3000"+file.path.split("public")[1].replace(/\\/g,"/")
+        });
+      }else{
+        res.json({ 
+          status:"1",
+          msg:"图片上传异常！请联系开发者",
         });
       }
-    });  
+      
+    })
+    form.on('close', () => {  // 表单数据解析完成，触发close事件
+      console.log('表单数据解析完成')
+    })
+    // form.parse(req,function(err,fields,files){  //其中fields表示你提交的表单数据对象，files表示你提交的文件对象
+    //   // console.log(req);
+    //   // console.log(fields,files); 
+    //   if(err){
+    //     res.json({
+    //       status:"1",
+    //       msg:"上传失败！"+err
+    //     });
+    //   }else{
+    //     console.log(files);
+    //     let urlPath = files.file[0].path.split("public")[1].replace(/\\/g,"/");
+    //     console.log(urlPath);
+    //     res.json({ 
+    //       status:"0",
+    //       msg:"上传成功！",
+    //       personPicture: "http://localhost:3000"+urlPath
+    //     });
+    //   }
+    // });  
     
 });
 

@@ -128,26 +128,49 @@ router.post('/upload/chatImage',function(req, res, next) {
   form.uploadDir=path.resolve(__dirname,`../public/images/chat`);
   // console.log(form.uploadDir);
   form.keepExtensions=true;   //是否保留后缀
-  form.autoFiels=true;       //启用文件事件，并禁用部分文件事件，如果监听文件事件，则默认为true。
-  form.parse(req,function(err,fields,files){  //其中fields表示你提交的表单数据对象，files表示你提交的文件对象
-    // console.log(req);
-    // console.log(fields,files); 
-    if(err){
-      res.json({
-        status:"1",
-        msg:"上传失败！"+err
-      });
-    }else{
-      console.log(files);
-      let urlPath = files.file[0].path.split("public")[1].replace(/\\/g,"/");
-      console.log(urlPath);
+  // form.autoFiels=true;       //启用文件事件，并禁用部分文件事件，如果监听文件事件，则默认为true。
+  form.parse(req);
+  form.on('field', (name, value) => { // 接收到数据参数时，触发field事件
+    console.log(name, value)
+  })
+  form.on('file', (name, file, ...rest) => { // 接收到文件参数时，触发file事件
+    //判断是否为空对象
+    if(JSON.stringify(file) !== '{}'){
       res.json({ 
         status:"0",
         msg:"上传成功！",
-        personPicture: "http://localhost:3000"+urlPath
+        personPicture: "http://localhost:3000"+file.path.split("public")[1].replace(/\\/g,"/")
+      });
+    }else{
+      res.json({ 
+        status:"1",
+        msg:"图片上传异常！请联系开发者",
       });
     }
-  });  
+    
+  })
+  form.on('close', () => {  // 表单数据解析完成，触发close事件
+    console.log('表单数据解析完成')
+  })
+  // form.parse(req,function(err,fields,files){  //其中fields表示你提交的表单数据对象，files表示你提交的文件对象
+  //   // console.log(req);
+  //   // console.log(fields,files); 
+  //   if(err){
+  //     res.json({
+  //       status:"1",
+  //       msg:"上传失败！"+err
+  //     });
+  //   }else{
+  //     console.log(files);
+  //     let urlPath = files.file[0].path.split("public")[1].replace(/\\/g,"/");
+  //     console.log(urlPath);
+  //     res.json({ 
+  //       status:"0",
+  //       msg:"上传成功！",
+  //       personPicture: "http://localhost:3000"+urlPath
+  //     });
+  //   }
+  // });  
   
 });
 
@@ -160,26 +183,49 @@ router.post('/upload/chatfile',function(req, res, next) {
   form.uploadDir=path.resolve(__dirname,`../public/chatFiles`);
   // console.log(form.uploadDir);
   form.keepExtensions=true;   //是否保留后缀
-  form.autoFiels=true;       //启用文件事件，并禁用部分文件事件，如果监听文件事件，则默认为true。
-  form.parse(req,function(err,fields,files){  //其中fields表示你提交的表单数据对象，files表示你提交的文件对象
-    // console.log(req);
-    // console.log(fields,files); 
-    if(err){
-      res.json({
-        status:"1",
-        msg:"上传失败！"+err
-      });
-    }else{
-      console.log(files);
-      let urlPath = files.file[0].path.split("public")[1].replace(/\\/g,"/");
-      console.log(urlPath);
+  // form.autoFiels=true;       //启用文件事件，并禁用部分文件事件，如果监听文件事件，则默认为true。
+  form.parse(req);
+  form.on('field', (name, value) => { // 接收到数据参数时，触发field事件
+    console.log(name, value)
+  })
+  form.on('file', (name, file, ...rest) => { // 接收到文件参数时，触发file事件
+    //判断是否为空对象
+    if(JSON.stringify(file) !== '{}'){
       res.json({ 
         status:"0",
         msg:"上传成功！",
-        fileUrl: "http://localhost:3000"+urlPath
+        fileUrl: "http://localhost:3000"+file.path.split("public")[1].replace(/\\/g,"/")
+      });
+    }else{
+      res.json({ 
+        status:"1",
+        msg:"文件上传异常！请联系开发者",
       });
     }
-  });  
+    
+  })
+  form.on('close', () => {  // 表单数据解析完成，触发close事件
+    console.log('表单数据解析完成')
+  })
+  // form.parse(req,function(err,fields,files){  //其中fields表示你提交的表单数据对象，files表示你提交的文件对象
+  //   // console.log(req);
+  //   // console.log(fields,files); 
+  //   if(err){
+  //     res.json({
+  //       status:"1",
+  //       msg:"上传失败！"+err
+  //     });
+  //   }else{
+  //     console.log(files);
+  //     let urlPath = files.file[0].path.split("public")[1].replace(/\\/g,"/");
+  //     console.log(urlPath);
+  //     res.json({ 
+  //       status:"0",
+  //       msg:"上传成功！",
+  //       fileUrl: "http://localhost:3000"+urlPath
+  //     });
+  //   }
+  // });  
   
 });
 
@@ -241,6 +287,7 @@ router.post("/delCollection",function(req,res,next){
 
 //新增文件信息
 router.post("/saveFile",function(req,res,next){
+  console.log(222, req.body);
   let fileType = req.body.fileUrl.split(".");
   console.log(req.body.fileFromPersonPicture,111111);
   let addsql = `INSERT INTO file(file_from_person_id,file_from_person_picture,file_person_id,from_type,file_name,file_size,file_url,file_type) VALUES('${req.body.fileFromPersonId}','${req.body.fileFromPersonPicture.replace(/\\/g,"/")}','${req.body.filePersonId}','${req.body.fromType}','${req.body.fileName}','${req.body.fileSize}','${req.body.fileUrl}','${fileType[fileType.length-1]}')`;

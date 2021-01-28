@@ -4,6 +4,8 @@ const fs = require('fs');
 const router = express.Router();
 const mysql = require('mysql');
 const multiparty = require("multiparty");
+// const multiparty = require('connect-multiparty');
+// let multipartMidd = multiparty();
 const socket = require('../tools/socket1');
 const db_config = {     
   host     : 'localhost',       
@@ -203,29 +205,49 @@ router.post('/registered',function(req,res,next) {
 //上传个人头像图片
 router.post('/upload/headImage', function(req, res, next) {
   let form = new multiparty.Form();
-  // form.uploadDir="./public/images";
-  //form.uploadDir="193.9.139.13:8080/cactusImage";
   var path = require('path');
   form.uploadDir=path.resolve(__dirname,'../public/images');
-  console.log(form.uploadDir);
   form.keepExtensions=true;   //是否保留后缀
-  form.autoFiels=true;       //启用文件事件，并禁用部分文件事件，如果监听文件事件，则默认为true。
-  form.parse(req,function(err,fields,files){  //其中fields表示你提交的表单数据对象，files表示你提交的文件对象
-    // console.log(req);
-    // console.log(fields,files); 
-    if(err){
-      res.json({
-        status:"1",
-        msg:"上传失败！"+err
-      });
-    }else{
+  // form.autoFiles=true;       //启用文件事件，并禁用部分文件事件，如果监听文件事件，则默认为true。
+  form.parse(req);
+  form.on('field', (name, value) => { // 接收到数据参数时，触发field事件
+    console.log(name, value)
+  })
+  form.on('file', (name, file, ...rest) => { // 接收到文件参数时，触发file事件
+    //判断是否为空对象
+    if(JSON.stringify(file) !== '{}'){
       res.json({ 
         status:"0",
         msg:"上传成功！",
-        personPicture: "http://localhost:3000"+files.file[0].path.split("public")[1].replace(/\\/g,"/")
+        personPicture: "http://localhost:3000"+file.path.split("public")[1].replace(/\\/g,"/")
+      });
+    }else{
+      res.json({ 
+        status:"1",
+        msg:"图片上传异常！请联系开发者",
       });
     }
-  });  
+    
+  })
+  form.on('close', () => {  // 表单数据解析完成，触发close事件
+    console.log('表单数据解析完成')
+  })
+  // form.parse(req,function(err,fields,files){  //其中fields表示你提交的表单数据对象，files表示你提交的文件对象
+  //   // console.log(req);
+  //   console.log(err,fields,files); 
+  //   // if(err){
+  //   //   res.json({
+  //   //     status:"1",
+  //   //     msg:"上传失败！"+err
+  //   //   });
+  //   // }else{
+  //   //   res.json({ 
+  //   //     status:"0",
+  //   //     msg:"上传成功！",
+  //   //     personPicture: "http://localhost:3000"+files.file[0].path.split("public")[1].replace(/\\/g,"/")
+  //   //   });
+  //   // }
+  // });  
   
 });
 
