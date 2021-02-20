@@ -1,5 +1,6 @@
 const express = require('express');
 const fs = require('fs');
+const path = require('path');
 // const io=require('socket.io')(80);
 const router = express.Router();
 const mysql = require('mysql');
@@ -205,7 +206,6 @@ router.post('/registered',function(req,res,next) {
 //上传个人头像图片
 router.post('/upload/headImage', function(req, res, next) {
   let form = new multiparty.Form();
-  var path = require('path');
   form.uploadDir=path.resolve(__dirname,'../public/images');
   form.keepExtensions=true;   //是否保留后缀
   // form.autoFiles=true;       //启用文件事件，并禁用部分文件事件，如果监听文件事件，则默认为true。
@@ -219,7 +219,7 @@ router.post('/upload/headImage', function(req, res, next) {
       res.json({ 
         status:"0",
         msg:"上传成功！",
-        personPicture: "http://localhost:3000"+file.path.split("public")[1].replace(/\\/g,"/")
+        personPicture: file.path.split("public")[1].replace(/\\/g,"/")
       });
     }else{
       res.json({ 
@@ -253,21 +253,26 @@ router.post('/upload/headImage', function(req, res, next) {
 
 //删除上传文件
 router.post('/delete/headImage', function(req, res, next) {
-  // console.log(req.body);
-  fs.unlinkSync(req.body.personPicture);
-  fs.exists(req.body.personPicture,(exist)=>{
-    if(exist){
+  var pathArr = req.body.personPicture.split('/');
+  var pathUrl = path.join(__dirname,'../public/images', pathArr[pathArr.length-1]);
+  fs.access(pathUrl, fs.constants.F_OK, (err)=>{
+    if(err){  //不存在
       res.json({
         status:"1",
         msg:"删除失败！"
       });
     }else{
+      fs.unlinkSync(pathUrl, (err) => {
+        console.log(err)
+      });
       res.json({
         status:"0",
         msg:"删除成功！"
       });
     }
   })
+  
+  
 });
 
 Date.prototype.Format = function (fmt) {
