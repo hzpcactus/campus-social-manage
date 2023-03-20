@@ -279,31 +279,25 @@ router.post('/delete',function(req,res,next){
 
 //查找花瓣网背景
 router.post('/searchTheme',function(req,res1,next){
-  let httpUrl = `https://huaban.com/search/?q=${req.body.searchBackground}&k8hh1pl7&page=${req.body.page}&per_page=20&wfl=1`;
-  // if(req.body.page==1){
-    axios.get(httpUrl).then(res=>{
-      let arr = [];
-      let param = {};
-      let rec = /app.page\["pins"\] = (.*?)app.page\["page"\]/igs;
-      let result = rec.exec(res.data)[1];
-      result = JSON.parse(result.trim().substr(0,result.length-2));
-      result.forEach(item=>{
-        param={
-          key:"https://hbimg.huabanimg.com/"+item["file"]["key"],
-          tags:item["tags"],
-          text:item["raw_text"],
-          like_count:item["like_count"],
-          repin_count:item["repin_count"],
-        }
-        arr.push(param);
-      });
-      console.log(arr);
-      res1.json({
-        status:"0",
-        msg:arr
-      });
+  const { searchBackground } = req.body
+  let httpUrl = `https://api.huaban.com/search/file?text=${searchBackground}&sort=all&limit=20&page=${req.body.page}&position=search_pin`;
+  axios.get(httpUrl).then(res => {
+    const result = res.data?.pins || [];
+    const arr = result.map(item => {
+      const { file, tags, raw_text, like_count, repin_count } = item
+      return {
+        key: `https://${file.bucket}.huaban.com/${file.key}`,
+        tags: tags,
+        text: raw_text || decodeURI(searchBackground),
+        like_count: like_count,
+        repin_count: repin_count,
+      }
+    });
+    res1.json({
+      status:"0",
+      msg:arr
+    });
   });
-  
 });
 
 //获取用户动态主题背景
